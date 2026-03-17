@@ -1,34 +1,38 @@
-const BASE_URL = import.meta.env.VITE_API_URL || '';
+const BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:5000";
 
-export const fetchPlans = async () => {
+// Generic request helper (clean + reusable)
+const request = async (endpoint, options = {}) => {
   try {
-    const res = await fetch(`${BASE_URL}/plans`);
-    if (!res.ok) throw new Error('Failed to fetch plans');
-    return await res.json();
+    const res = await fetch(`${BASE_URL}${endpoint}`, {
+      headers: {
+        "Content-Type": "application/json",
+        ...options.headers,
+      },
+      ...options,
+    });
+
+    const data = await res.json();
+
+    if (!res.ok) {
+      throw new Error(data.error || "Something went wrong");
+    }
+
+    return data;
   } catch (err) {
-    console.error(err);
+    console.error(`API Error [${endpoint}]:`, err.message);
     return null;
   }
 };
 
-export const fetchTestimonials = async () => {
-  try {
-    const res = await fetch(`${BASE_URL}/testimonials`);
-    if (!res.ok) throw new Error('Failed to fetch testimonials');
-    return await res.json();
-  } catch (err) {
-    console.error(err);
-    return null;
-  }
-};
+// GET: Plans
+export const fetchPlans = () => request("/plans");
 
-export const submitContact = async (formData) => {
-  const res = await fetch(`${BASE_URL}/contact`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+// GET: Testimonials
+export const fetchTestimonials = () => request("/testimonials");
+
+// POST: Contact form
+export const submitContact = (formData) =>
+  request("/contact", {
+    method: "POST",
     body: JSON.stringify(formData),
   });
-  const data = await res.json();
-  if (!res.ok) throw new Error(data.error || 'Submission failed');
-  return data;
-};
